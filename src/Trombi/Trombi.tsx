@@ -3,7 +3,7 @@ import Alert from '@mui/material/Alert';
 import Pagination from '@mui/material/Pagination';
 import { TrombiProps } from './Trombi.types.ts';
 import CharacterCard from './CharacterCard';
-// import CharacterCardClass from './CharacterCardClass';
+// import CharacterCardClass from "./CharacterCardClass";
 
 export const Trombi = ({
   characters,

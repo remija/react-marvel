@@ -1,7 +1,9 @@
-import { BrowserRouter as Router } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { AppBar, Grid, Toolbar, Typography } from '@mui/material';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import Trombi from './Trombi';
+import Details from './Character/Details';
+// import {default as DetailsClass} from "./Character/DetailsClass";
 
 const theme = createTheme({
   palette: {
@@ -24,14 +26,16 @@ const App = () => {
               minHeight: 100
             }}
           >
-            <img
-              src="/images/marvel_logo.png"
-              alt="Marvel Logo"
-              style={{
-                minHeight: '100%',
-                maxWidth: 100
-              }}
-            />
+            <a href="/">
+              <img
+                src="/images/marvel_logo.png"
+                alt="Marvel Logo"
+                style={{
+                  minHeight: '100%',
+                  maxWidth: 100
+                }}
+              />
+            </a>
             <Typography
               variant="h3"
               sx={{
@@ -60,7 +64,10 @@ const App = () => {
             }}
           >
             <Grid item xs={6}>
-              <Trombi />
+              <Routes>
+                <Route path="/" element={<Trombi />} />
+                <Route path="/characters/:characterId" element={<Details />} />
+              </Routes>
             </Grid>
           </Grid>
         </div>

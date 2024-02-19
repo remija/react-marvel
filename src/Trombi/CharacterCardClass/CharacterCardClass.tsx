@@ -11,17 +11,26 @@ import {
 } from '@mui/material';
 import { CharacterProps } from '../CharacterCard/CharacterCard.tsx';
 import { ThumbDown, ThumbUp } from '@mui/icons-material';
+import { NavigateFunction, useNavigate } from 'react-router-dom';
+
+type CharacterClassProps = CharacterProps & {
+  navigate?: NavigateFunction;
+};
+
+function withRouter(Component: React.ComponentType<CharacterClassProps>) {
+  return (props: CharacterProps) => <Component {...props} navigate={useNavigate()} />;
+}
 
 type CharacterState = {
   rating: number;
 };
 
-class CharacterCardClass extends React.Component<CharacterProps, CharacterState> {
+class CharacterCardClass extends React.Component<CharacterClassProps, CharacterState> {
   state: CharacterState = {
     rating: 0
   };
 
-  constructor(props: CharacterProps) {
+  constructor(props: CharacterClassProps) {
     super(props);
   }
 
@@ -33,9 +42,22 @@ class CharacterCardClass extends React.Component<CharacterProps, CharacterState>
     this.setState({ rating: this.state.rating - 1 });
   };
 
+  goToDetails = () => {
+    this.props.navigate?.(`/characters/${this.props.id}`);
+  };
+
   render() {
     return (
-      <Grid item component={Card} xs={12} md={3}>
+      <Grid
+        item
+        component={Card}
+        xs={12}
+        md={3}
+        onClick={() => this.goToDetails()}
+        sx={{
+          cursor: 'pointer'
+        }}
+      >
         <CardMedia
           sx={{
             height: '10em'
@@ -67,4 +89,4 @@ class CharacterCardClass extends React.Component<CharacterProps, CharacterState>
   }
 }
 
-export default CharacterCardClass;
+export default withRouter(CharacterCardClass);

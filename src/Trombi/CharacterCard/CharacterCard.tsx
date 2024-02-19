@@ -1,3 +1,4 @@
+import React from 'react';
 import {
   Button,
   Card,
@@ -8,16 +9,31 @@ import {
   Stack,
   Typography
 } from '@mui/material';
-import { Character } from '../Trombi.types.ts';
 import { ThumbDown, ThumbUp } from '@mui/icons-material';
-import React from 'react';
+import { Character } from '../Trombi.types.ts';
+import { useNavigate } from 'react-router-dom';
 
 export type CharacterProps = Character;
-const CharacterCard = ({ name, thumbnail }: CharacterProps) => {
+const CharacterCard = ({ id, name, thumbnail }: CharacterProps) => {
   const [rating, setRating] = React.useState(0);
 
+  const navigate = useNavigate();
+
+  const goToDetails = () => {
+    navigate(`/characters/${id}`);
+  };
+
   return (
-    <Grid item component={Card} xs={12} md={3}>
+    <Grid
+      item
+      component={Card}
+      xs={12}
+      md={3}
+      onClick={() => goToDetails()}
+      sx={{
+        cursor: 'pointer'
+      }}
+    >
       <CardMedia
         sx={{
           height: '10em'
