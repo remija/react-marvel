@@ -1,6 +1,6 @@
 import MD5 from 'crypto-js/md5';
 
-export const fetchCharacter = async (id: string) => {
+export const fetchCharacter = async (id: string, signal: AbortSignal) => {
   const timestamp = new Date().getTime();
   const stringToHash = `${timestamp}${import.meta.env.VITE_MARVEL_API_PRIVATE_KEY}${import.meta.env.VITE_MARVEL_API_PUBLIC_KEY}`;
   const hash = MD5(stringToHash);
@@ -16,7 +16,8 @@ export const fetchCharacter = async (id: string) => {
     headers: {
       Accept: 'application/json',
       'Content-Type': 'application/json'
-    }
+    },
+    signal,
   });
   return response.json();
 };

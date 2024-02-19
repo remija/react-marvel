@@ -36,10 +36,14 @@ class Details extends React.Component<DetailsProps, DetailsState> {
     isError: false,
     isLoading: false
   };
+
+  controller = new AbortController();
+
   async componentDidMount() {
+    console.log('mounted');
     this.setState({ isLoading: true });
     try {
-      const response = await fetchCharacter(this.props?.params?.characterId as string);
+      const response = await fetchCharacter(this.props?.params?.characterId as string, this.controller.signal);
       if (response.data?.results?.length > 0) {
         this.setState({ character: response.data?.results[0] });
       }
@@ -47,12 +51,21 @@ class Details extends React.Component<DetailsProps, DetailsState> {
       console.error(e);
       this.setState({ isError: true });
     } finally {
+      console.log('data loaded');
       this.setState({ isLoading: false });
     }
   }
 
   componentDidUpdate(prevProps: DetailsProps) {
     console.log('re-rendered', prevProps, this.props);
+  }
+
+  componentWillUnmount() {
+    console.log('unmounting, cleanup');
+    if(this.state.isLoading) {
+      console.log('aborting fetch')
+      this.controller.abort();
+    }
   }
 
   render() {
@@ -78,7 +91,7 @@ class Details extends React.Component<DetailsProps, DetailsState> {
                   alt={this.state.character?.name}
                   sx={{ width: '25%' }}
                 ></CardMedia>
-                <Typography paddingLeft="2em" variant="p" component="div">
+                <Typography paddingLeft="2em" paragraph={true} component="div">
                   {this.state.character?.description || 'No description available'}
                 </Typography>
               </Box>

@@ -23,8 +23,10 @@ const Details = () => {
 
   useEffect(() => {
     console.log('re-rendered');
+    const controller = new AbortController();
     const loadCharacter = async (characterId: string) => {
-      const response = await fetchCharacter(characterId);
+      const signal = controller.signal;
+      const response = await fetchCharacter(characterId, signal);
       setCharacter(response.data?.results[0]);
     };
 
@@ -39,6 +41,12 @@ const Details = () => {
         setIsLoading(false);
       }
     }
+
+    return () => {
+      console.log('cleanup');
+      controller.abort();
+    }
+
   }, [characterId, setCharacter, setIsError, setIsLoading]);
 
   return (
@@ -63,7 +71,7 @@ const Details = () => {
                 alt={character?.name}
                 sx={{ width: '25%' }}
               ></CardMedia>
-              <Typography paddingLeft="2em" variant="p" component="div">
+              <Typography paddingLeft="2em" paragraph={true} component="div">
                 {character?.description || 'No description available'}
               </Typography>
             </Box>
