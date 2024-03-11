@@ -43,7 +43,10 @@ class Details extends React.Component<DetailsProps, DetailsState> {
     console.log('mounted');
     this.setState({ isLoading: true });
     try {
-      const response = await fetchCharacter(this.props?.params?.characterId as string, this.controller.signal);
+      const response = await fetchCharacter(
+        this.props?.params?.characterId as string,
+        this.controller.signal
+      );
       if (response.data?.results?.length > 0) {
         this.setState({ character: response.data?.results[0] });
       }
@@ -62,8 +65,8 @@ class Details extends React.Component<DetailsProps, DetailsState> {
 
   componentWillUnmount() {
     console.log('unmounting, cleanup');
-    if(this.state.isLoading) {
-      console.log('aborting fetch')
+    if (this.state.isLoading) {
+      console.log('aborting fetch');
       this.controller.abort();
     }
   }

@@ -1,21 +1,12 @@
 import { useEffect, useReducer } from 'react';
 import { useMediaQuery, useTheme } from '@mui/material';
 import { createSearchParams, useNavigate } from 'react-router-dom';
-import {
-  CHANGE_PAGE_FETCH_CHARACTERS,
-  FETCH_FAILURE,
-  FETCH_INIT,
-  FETCH_SUCCESS,
-  UPDATE_PAGE_LIMIT
-} from './constants.js';
+import { CHANGE_PAGE_FETCH_CHARACTERS, FETCH_SUCCESS, UPDATE_PAGE_LIMIT } from './constants.js';
 import {
   ChangePagePayload,
   DataFetchReducerAction,
-  FetchErrorPayload,
   FetchSuccessPayload,
   SetStateChangePageParams,
-  SetStateFetchFailureParams,
-  SetStateFetchLoadingParams,
   SetStateFetchSuccessParams,
   SetStateUpdatePageLimitParams,
   TrombiState,
@@ -23,6 +14,7 @@ import {
   UseTrombiProps,
   UseTrombiReturn
 } from './Trombi.types.ts';
+import { useQuery } from 'react-query';
 import { fetchCharacters } from './fetchCharacters.ts';
 
 const PAGE_LIMIT_MOBILE = 5;
@@ -37,44 +29,6 @@ const initialState: TrombiState = {
   limit: PAGE_LIMIT_MOBILE,
   currentPage: 1,
   numberPages: 0
-};
-
-export const setStateFetchLoading = ({ state }: SetStateFetchLoadingParams) => ({
-  ...state,
-  characters: [],
-  total: 0,
-  numberPages: 0,
-  isLoading: true,
-  hasNoResult: false,
-  hasFetchError: false
-});
-
-export const setStateFetchSuccess = ({
-  state,
-  payload
-}: SetStateFetchSuccessParams): TrombiState => {
-  const totalResults = payload.total ?? 0;
-
-  const totalNumberPages = totalResults > 0 ? Math.ceil(totalResults / state.limit) : 0;
-  const newCurrentPage = Math.ceil(state.offset / state.limit) + 1;
-
-  return {
-    ...state,
-    isLoading: false,
-    characters: payload.results,
-    total: totalResults,
-    numberPages: totalNumberPages,
-    currentPage: newCurrentPage
-  };
-};
-
-export const setStateFetchFailure = ({ state }: SetStateFetchFailureParams): TrombiState => {
-  return {
-    ...state,
-    hasFetchError: true,
-    isLoading: false,
-    characters: []
-  };
 };
 
 export const setStateUpdatePageLimit = ({
@@ -93,25 +47,37 @@ export const setStateChangePage = ({ state, payload }: SetStateChangePageParams)
   currentPage: payload.pageToDisplay
 });
 
+export const setStateFetchSuccess = ({
+  state,
+  payload
+}: SetStateFetchSuccessParams): TrombiState => {
+  const totalResults = payload?.total ?? 0;
+
+  const totalNumberPages = totalResults > 0 ? Math.ceil(totalResults / state.limit) : 0;
+  const newCurrentPage = Math.ceil(state.offset / state.limit) + 1;
+
+  return {
+    ...state,
+    characters: payload?.results,
+    total: totalResults,
+    numberPages: totalNumberPages,
+    currentPage: newCurrentPage
+  };
+};
+
 const dataFetchReducer = (
   state: TrombiState = initialState,
   {
     type,
     payload,
-    setStateFetchLoadingFn = setStateFetchLoading,
     setStateFetchSuccessFn = setStateFetchSuccess,
-    setStateFetchFailureFn = setStateFetchFailure,
     setStateUpdatePageLimitFn = setStateUpdatePageLimit,
     setStateChangePageFn = setStateChangePage
   }: DataFetchReducerAction
 ) => {
   switch (type) {
-    case FETCH_INIT:
-      return setStateFetchLoadingFn({ state });
     case FETCH_SUCCESS:
       return setStateFetchSuccessFn({ state, payload: payload as FetchSuccessPayload });
-    case FETCH_FAILURE:
-      return setStateFetchFailureFn({ state, payload: payload as FetchErrorPayload });
     case UPDATE_PAGE_LIMIT:
       return setStateUpdatePageLimitFn({ state, payload: payload as UpdatePageLimitPayload });
     case CHANGE_PAGE_FETCH_CHARACTERS:
@@ -121,11 +87,6 @@ const dataFetchReducer = (
   }
 };
 
-const setFetchInit = (dispatch: React.Dispatch<DataFetchReducerAction>) => () =>
-  dispatch({ type: FETCH_INIT } as DataFetchReducerAction);
-const setFetchError =
-  (dispatch: React.Dispatch<DataFetchReducerAction>) => (payload: FetchErrorPayload) =>
-    dispatch({ type: FETCH_FAILURE, payload } as unknown as DataFetchReducerAction);
 const setFetchSuccess =
   (dispatch: React.Dispatch<DataFetchReducerAction>) => (payload: FetchSuccessPayload) =>
     dispatch({ type: FETCH_SUCCESS, payload } as DataFetchReducerAction);
@@ -141,8 +102,6 @@ const setUpdatePageLimit =
 export const useTrombi = ({
   offset,
   dataFetchReducerFn = dataFetchReducer,
-  setFetchInitFn = setFetchInit,
-  setFetchErrorFn = setFetchError,
   setFetchSuccessFn = setFetchSuccess,
   initState = initialState
 }: UseTrombiProps): UseTrombiReturn => {
@@ -163,25 +122,13 @@ export const useTrombi = ({
     } as DataFetchReducerAction);
   };
 
-  useEffect(() => {
-    const controller = new AbortController();
-    const signal = controller.signal;
-    const fetchLoadCharacters = async () => {
-      try {
-        setFetchInitFn(dispatch)();
-        const fetchResult = await fetchCharacters(trombiState.offset, trombiState.limit, signal);
-        setFetchSuccessFn(dispatch)(fetchResult?.data);
-      } catch (error) {
-        setFetchErrorFn(dispatch)({ error });
-      }
-    };
+  const controller = new AbortController();
+  const signal = controller.signal;
 
-    fetchLoadCharacters();
-
-    return () => {
-      controller.abort();
-    };
-  }, [trombiState.offset, trombiState.limit, setFetchInitFn, setFetchErrorFn, setFetchSuccessFn]);
+  const { data, isLoading, isError } = useQuery(
+    ['characters', trombiState.offset, trombiState.limit],
+    async () => fetchCharacters(trombiState.offset, trombiState.limit, signal)
+  );
 
   useEffect(() => {
     setUpdatePageLimit(dispatch)(isSmallScreen);
@@ -196,8 +143,14 @@ export const useTrombi = ({
     });
   }, [navigate, trombiState.offset]);
 
+  useEffect(() => {
+    setFetchSuccessFn(dispatch)(data?.data);
+  }, [data?.data, setFetchSuccessFn]);
+
   return {
     ...trombiState,
+    isLoading: isLoading,
+    hasFetchError: isError,
     changePageFetchCharacters
   };
 };

@@ -45,8 +45,7 @@ const Details = () => {
     return () => {
       console.log('cleanup');
       controller.abort();
-    }
-
+    };
   }, [characterId, setCharacter, setIsError, setIsLoading]);
 
   return (

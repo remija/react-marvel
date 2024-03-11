@@ -1,9 +1,20 @@
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { BrowserRouter as Router, Link, Route, Routes } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from 'react-query';
+// import {ReactQueryDevtools} from "react-query-devtools";
 import { AppBar, Grid, Toolbar, Typography } from '@mui/material';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import Trombi from './Trombi';
-import Details from './Character/Details';
+// import Details from './Character/Details';
+import { default as Details } from './Character/DetailsWithReactQuery';
 // import {default as DetailsClass} from "./Character/DetailsClass";
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5
+    }
+  }
+});
 
 const theme = createTheme({
   palette: {
@@ -20,57 +31,60 @@ const App = () => {
   return (
     <Router>
       <ThemeProvider theme={theme}>
-        <AppBar position="static">
-          <Toolbar
-            sx={{
-              minHeight: 100
-            }}
-          >
-            <a href="/">
-              <img
-                src="/images/marvel_logo.png"
-                alt="Marvel Logo"
-                style={{
-                  minHeight: '100%',
-                  maxWidth: 100
-                }}
-              />
-            </a>
-            <Typography
-              variant="h3"
+        <QueryClientProvider client={queryClient}>
+          <AppBar position="static">
+            <Toolbar
               sx={{
-                flexGrow: 1,
-                paddingLeft: '2%',
-                color: 'white'
+                minHeight: 100
               }}
             >
-              Characters
-            </Typography>
-          </Toolbar>
-        </AppBar>
-        <div
-          style={{
-            flexGrow: 1,
-            padding: '10px'
-          }}
-        >
-          <Grid
-            container
-            alignItems="center"
-            justifyContent="center"
-            spacing={2}
-            sx={{
-              marginTop: '2em'
+              <Link to="/">
+                <img
+                  src="/images/marvel_logo.png"
+                  alt="Marvel Logo"
+                  style={{
+                    minHeight: '100%',
+                    maxWidth: 100
+                  }}
+                />
+              </Link>
+              <Typography
+                variant="h3"
+                sx={{
+                  flexGrow: 1,
+                  paddingLeft: '2%',
+                  color: 'white'
+                }}
+              >
+                Characters
+              </Typography>
+            </Toolbar>
+          </AppBar>
+          <div
+            style={{
+              flexGrow: 1,
+              padding: '10px'
             }}
           >
-            <Grid item xs={6}>
-              <Routes>
-                <Route path="/" element={<Trombi />} />
-                <Route path="/characters/:characterId" element={<Details />} />
-              </Routes>
+            <Grid
+              container
+              alignItems="center"
+              justifyContent="center"
+              spacing={2}
+              sx={{
+                marginTop: '2em'
+              }}
+            >
+              <Grid item xs={6}>
+                <Routes>
+                  <Route path="/" element={<Trombi />} />
+                  <Route path="/characters/:characterId" element={<Details />} />
+                </Routes>
+              </Grid>
             </Grid>
-          </Grid>
-        </div>
+          </div>
+          {/*<ReactQueryDevtools/>*/}
+        </QueryClientProvider>
       </ThemeProvider>
     </Router>
   );

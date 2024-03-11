@@ -1,5 +1,5 @@
 import { useLocation } from 'react-router-dom';
-import { useTrombi } from './Trombi.hook';
+import { useTrombi } from './TrombiWithReactQuery.hook';
 import { Trombi } from './Trombi.js';
 
 const TrombiEnhanced = () => {
